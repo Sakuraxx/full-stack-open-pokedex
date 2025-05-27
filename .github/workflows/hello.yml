@@ -1,14 +1,28 @@
-name: Hello World!
+name: Hello World with Date and Directory Info
 
 on:
   push:
     branches:
       - main
+  workflow_dispatch: # Allows manual triggering from the Actions tab
 
 jobs:
   hello_world_job:
-    runs-on: ubuntu-18.04.5
+    runs-on: ubuntu-latest # It's generally better to use ubuntu-latest unless you need a very specific older version
     steps:
       - name: Say hello
         run: |
           echo "Hello World!"
+
+      - name: Print current date
+        run: |
+          echo "Current date and time is:"
+          date
+
+      - name: List current directory content (long format)
+        run: |
+          echo "Current directory content (long format):"
+          ls -lah
+          # -l: use a long listing format
+          # -a: do not ignore entries starting with . (show hidden files)
+          # -h: with -l, print sizes in human readable format (e.g., 1K 234M 2G)
