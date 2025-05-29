@@ -1,6 +1,8 @@
+/* eslint-disable react/prop-types */
 import React from 'react'
 import { Link } from 'react-router-dom'
 
+// eslint-disable-next-line react/prop-types
 const PokemonList = ({ pokemonList }) => {
   return (
     <div className="list-container">

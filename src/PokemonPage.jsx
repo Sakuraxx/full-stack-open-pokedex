@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import React from 'react'
 import { Link, useParams } from 'react-router-dom'
 import LoadingSpinner from './LoadingSpinner'
@@ -7,6 +8,7 @@ import ErrorMessage from './ErrorMessage'
 
 const formatName = (nameWithDash) => nameWithDash.replace('-', ' ')
 
+// eslint-disable-next-line react/prop-types
 const PokemonPage = ({ previous, next }) => {
   const { name } = useParams()
   const { data: pokemon, error, isLoading } = useApi(`https://pokeapi.co/api/v2/pokemon/${name}`)
