@@ -15,10 +15,25 @@ jobs:
         with:
           node-version: '20'
       - name: Install dependencies 
-        run: npm install  
+        run: npm install
+      
+      # Playwright 特定的步骤：安装浏览器驱动
+      # 这是官方推荐的方法，可以确保浏览器版本与 Playwright 版本兼容
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps # '--with-deps' 会安装操作系统依赖 (主要针对 Linux)
+        
       - name: Check style
         run: npm run eslint
       - name: Build
         run: npm run build
       - name: Test
         run: npm test
+
+      # 运行 Playwright 端到端测试
+      # 假设你的 Playwright 测试命令在 package.json 中定义为 'test:e2e' 或类似
+      # 或者你可以直接调用 playwright test
+      - name: Run Playwright e2e tests
+        # 选项 1: 如果你的 package.json script 运行 Playwright 测试
+        # run: npm run test:e2e
+        # 选项 2: 直接调用 Playwright (更常见)
+        run: npx playwright test
