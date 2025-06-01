@@ -1,9 +1,10 @@
-import 'react'
+import React from 'react'
 import { render, screen } from '@testing-library/react'
 import axiosMock from 'axios'
 import { act } from 'react-dom/test-utils'
 import '@testing-library/jest-dom'
-import '../src/App'
+import { BrowserRouter as Router } from 'react-router-dom'
+import App from '../src/App'
 
 jest.mock('axios')
 

@@ -2,6 +2,7 @@ import globals from 'globals';
 import js from "@eslint/js";
 import pluginReactConfig from "eslint-plugin-react/configs/recommended.js";
 import pluginJest from "eslint-plugin-jest"; // 导入 Jest 插件
+import pluginReact from 'eslint-plugin-react'
 
 // 如果你想使用 @stylistic 插件处理风格规则 (从你的旧配置看，你有很多风格规则)
 import stylisticJs from '@stylistic/eslint-plugin-js';
@@ -19,6 +20,7 @@ export default [
       ecmaVersion: 'latest',
       globals: {
         ...globals.node, // Node.js 全局变量
+        ...globals.jest, // <--- 添加 Jest 的全局变量
       },
     },
     rules: {
@@ -29,13 +31,19 @@ export default [
   // 3. 前端 React/JSX 和 Jest 测试文件配置
   // 这个配置块将应用 React 推荐规则、Jest 推荐规则以及你的自定义规则
   {
-    files: ['src/**/*.js', 'src/**/*.jsx', 'test/**/*.jsx', '**/*.test.js', '**/*.spec.js'], // 匹配前端 JS/JSX 和 Jest 测试文件
+    files: [
+     'src/**/*.{js,jsx}',
+     'test/**/*.{js,jsx}', // <--- 确保这个能匹配你的 .jsx 文件
+     '**/*.{test,spec}.{js,jsx}' // 更通用的匹配
+   ],
     ...pluginReactConfig,   // 应用 eslint-plugin-react 的推荐配置 (等同于 "plugin:react/recommended")
     plugins: { // 明确声明插件，以便可以使用其规则 (比如 jest/...)
       // 'react' 插件通过 pluginReactConfig 已经间接引入了，但为了清晰或自定义可以写上
-      // react: pluginReact, // (需要 import pluginReact from 'eslint-plugin-react') - pluginReactConfig 通常足够
+      react: pluginReact, // (需要 import pluginReact from 'eslint-plugin-react') - pluginReactConfig 通常足够
       jest: pluginJest,
     },
+    ...pluginJest.configs['flat/recommended'],
+    ...pluginReact.configs.flat.recommended, // This is the key for eslint-plugin-react with flat config
     languageOptions: {
       sourceType: 'module',         // 等同于 parserOptions.sourceType
       ecmaVersion: 'latest',        // 等同于 parserOptions.ecmaVersion (2018 会被 'latest' 覆盖)
@@ -57,6 +65,24 @@ export default [
     },
     rules: {
       "indent": ["error", 2], // 这些风格规则推荐使用 @stylistic/eslint-plugin-js
+      
+      // `pluginReact.configs.flat.recommended` should already enable `react/jsx-uses-vars`.
+      // If you want to be explicit or ensure it:
+      "react/jsx-uses-vars": "error",
+
+      // For React 17+ new JSX transform, you don't need 'React' in scope
+      "react/react-in-jsx-scope": "off",
+
+      // Your original no-unused-vars.
+      // Note: `react/jsx-uses-vars` makes this less of an issue for JSX components.
+      // You might want to configure how it handles regular variables and function arguments.
+      "no-unused-vars": ["warn", {
+        "vars": "all", // Check all variables
+        "args": "after-used", // Check arguments only if they are not used
+        "ignoreRestSiblings": true,
+        "argsIgnorePattern": "^_", // Ignore arguments starting with _
+        "varsIgnorePattern": "^_" // Ignore variables starting with _ (e.g., for explicitly unused vars)
+      }],
     }
   },
 
