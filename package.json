@@ -61,6 +61,6 @@
   },
   "jest": {
     "testEnvironment": "jsdom",
-    "testPathIgnorePatterns": ["e2e-tests"]
+    "testPathIgnorePatterns": ["tests-e2e"]
   }
 }
