@@ -26,6 +26,10 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(distPath, 'index.html')); // 更明确
 });
 
+app.get('/version', (req, res) => {
+  res.json({ version: '1.0.0' });
+});
+
 app.listen(PORT, () => {
   console.log(`server started on port ${PORT}`);
 });
