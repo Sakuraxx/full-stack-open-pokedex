@@ -45,7 +45,7 @@ jobs:
     if: github.ref == 'refs/heads/main' && success() # 3. (推荐) 确保只在 main 分支且前置 Job 成功时部署
     steps:
       - name: Trigger deployment
-        uses: render-actions/deploy-to-render@v1.4.5
+        uses: JorgeLNJunior/render-deploy@v1.4.5
         with:
           serviceId: ${{ secrets.RENDER_SERVICE_ID }}
           apiKey: ${{ secrets.RENDER_API_KEY }}
