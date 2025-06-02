@@ -13,13 +13,11 @@ const PORT = process.env.PORT || 5000;
 // 构建 dist 文件夹的绝对路径
 // __dirname 是当前文件 (app.js) 所在的目录 (src)
 // path.join(__dirname, '../dist') 会得到 /opt/render/project/src/../dist，即 /opt/render/project/dist/
-const distPath = path.join(__dirname, '../dist');
+const distPath = path.join(__dirname, 'dist');
 
 app.use(express.static(distPath));
 
 app.get('/health', (req, res) => {
-  // eslint-disable-next-line no-constant-condition
-  if (true) throw('error...  ');
   res.send('fine');
 });
 
