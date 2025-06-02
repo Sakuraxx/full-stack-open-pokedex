@@ -18,7 +18,7 @@ const distPath = path.join(__dirname, 'dist');
 app.use(express.static(distPath));
 
 app.get('/health', (req, res) => {
-  res.send('fine ^_^');
+  res.send('I\'m good! ^_^');
 });
 
 app.get('*', (req, res) => {
