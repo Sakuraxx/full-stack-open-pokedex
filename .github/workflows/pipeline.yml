@@ -1,13 +1,24 @@
-name: Deployment pipeline
+name: Deployment and Tagging Pipeline
 
 on:
+  # 1. 触发器：监听对 main 分支的 push 事件 (用于部署和常规的 CI)
   push:
     branches:
       - main
+  # 2. 触发器：监听 Pull Request 事件 (用于在 PR 合并后打标签)
+  pull_request:
+    types:
+      - closed # 只在 PR 被关闭时触发
+    branches:
+      - main # 只关心目标是 main 分支的 PR
 
 jobs:
-  build_and_test: # 1. 重命名 Job
-    name: Build and Test App # 为 Job 添加一个易读的名称
+  build_and_test:
+    name: Build and Test App
+    # 这个 Job 应该在 push 到 main 或者 PR 更新到 main 时都运行
+    # 如果只想在 push to main 时运行，可以添加 if 条件
+    # if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # 或者，如果你希望 PR 过程中也运行测试，可以保留它，或者为 PR 创建单独的测试流程
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -16,36 +27,53 @@ jobs:
           node-version: '20'
       - name: Install dependencies
         run: npm install
-
-      # Playwright 特定的步骤：安装浏览器驱动
-      # 这是官方推荐的方法，可以确保浏览器版本与 Playwright 版本兼容
       - name: Install Playwright Browsers
-        run: npx playwright install --with-deps # '--with-deps' 会安装操作系统依赖 (主要针对 Linux)
-
+        run: npx playwright install --with-deps
       - name: Check style
         run: npm run eslint
       - name: Build
         run: npm run build
-      - name: Run unit/integration tests # 区分 npm test 和 e2e 测试
+      - name: Run unit/integration tests
         run: npm test
-
-      # 运行 Playwright 端到端测试
-      # 假设你的 Playwright 测试命令在 package.json 中定义为 'test:e2e' 或类似
-      # 或者你可以直接调用 playwright test
       - name: Run Playwright e2e tests
-        # 选项 1: 如果你的 package.json script 运行 Playwright 测试
-        # run: npm run test:e2e
-        # 选项 2: 直接调用 Playwright (更常见)
         run: npx playwright test
 
-  deploy: # 1. 重命名 Job
-    name: Deploy to Render
+  deploy_to_main:
+    name: Deploy to Render (Main Branch)
     runs-on: ubuntu-latest
-    needs: build_and_test # 2. 添加 'needs' 关键字，确保此 Job 在 build_and_test 成功后运行
-    if: github.ref == 'refs/heads/main' && success() # 3. (推荐) 确保只在 main 分支且前置 Job 成功时部署
+    needs: build_and_test
+    # 只在直接推送到 main 分支时，并且 build_and_test 成功后部署
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && success()
     steps:
+      # 当从 main 分支部署时，checkout main 分支的最新代码
       - uses: actions/checkout@v4
-      - uses: JorgeLNJunior/render-deploy@v1.4.4
+      - name: Deploy to Render
+        uses: JorgeLNJunior/render-deploy@v1.4.4
         with:
           service_id: ${{ secrets.RENDER_SERVICE_ID }}
           api_key: ${{ secrets.RENDER_API_KEY }}
+          # 确保此 action 等待部署成功
+
+  tag_release_on_pr_merge:
+    name: Bump version and Push Tag on PR Merge
+    runs-on: ubuntu-latest
+    # 这个 Job 只在 PR 被关闭并且是合并到 main 分支的情况下运行
+    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
+    permissions: # 为了让 action 有权限推送到仓库
+      contents: write # 授予写仓库内容的权限，包括推送标签
+    steps:
+      # 检出 PR 合并后的那个特定的合并提交 (merge commit)
+      - name: Checkout merge commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }} # 检出合并提交
+          fetch-depth: 0 # 获取所有历史记录以便 action 能正确计算下一个版本号
+
+      - name: Bump version and push tag
+        uses: anothrNick/github-tag-action@1.73.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEFAULT_BUMP: patch # 示例：默认为 patch，你可以根据需要调整
+          WITH_V: true # 示例：标签会是 vX.Y.Z
+          # 根据 anothrNick/github-tag-action 文档配置其他参数
+          # 例如，如果你的 PR 标题或标签可以驱动版本，这里可能需要不同的配置
