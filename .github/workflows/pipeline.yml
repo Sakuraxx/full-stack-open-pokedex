@@ -45,7 +45,7 @@ jobs:
     if: github.ref == 'refs/heads/main' && success() # 3. (推荐) 确保只在 main 分支且前置 Job 成功时部署
     steps:
       - name: Trigger deployment
-        uses: sws2apps/render-deployment@main # 考虑使用固定版本号以提高稳定性，例如 @v1.0.0
+        uses: render-actions/deploy-to-render@v1.4.5
         with:
           serviceId: ${{ secrets.RENDER_SERVICE_ID }}
           apiKey: ${{ secrets.RENDER_API_KEY }}
