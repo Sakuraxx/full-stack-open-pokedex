@@ -6,17 +6,17 @@ on:
       - main
 
 jobs:
-
-  simple_deployment_pipeline:
+  build_and_test: # 1. 重命名 Job
+    name: Build and Test App # 为 Job 添加一个易读的名称
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Install dependencies 
+      - name: Install dependencies
         run: npm install
-      
+
       # Playwright 特定的步骤：安装浏览器驱动
       # 这是官方推荐的方法，可以确保浏览器版本与 Playwright 版本兼容
       - name: Install Playwright Browsers
@@ -26,25 +26,27 @@ jobs:
         run: npm run eslint
       - name: Build
         run: npm run build
-      - name: Test
+      - name: Run unit/integration tests # 区分 npm test 和 e2e 测试
         run: npm test
 
-    # 运行 Playwright 端到端测试
-    # 假设你的 Playwright 测试命令在 package.json 中定义为 'test:e2e' 或类似
-    # 或者你可以直接调用 playwright test
+      # 运行 Playwright 端到端测试
+      # 假设你的 Playwright 测试命令在 package.json 中定义为 'test:e2e' 或类似
+      # 或者你可以直接调用 playwright test
       - name: Run Playwright e2e tests
         # 选项 1: 如果你的 package.json script 运行 Playwright 测试
         # run: npm run test:e2e
         # 选项 2: 直接调用 Playwright (更常见)
         run: npx playwright test
-  
-  main:
+
+  deploy: # 1. 重命名 Job
     name: Deploy to Render
     runs-on: ubuntu-latest
+    needs: build_and_test # 2. 添加 'needs' 关键字，确保此 Job 在 build_and_test 成功后运行
+    if: github.ref == 'refs/heads/main' && success() # 3. (推荐) 确保只在 main 分支且前置 Job 成功时部署
     steps:
       - name: Trigger deployment
-        uses: sws2apps/render-deployment@main #consider using pin for dependabot auto update
+        uses: sws2apps/render-deployment@main # 考虑使用固定版本号以提高稳定性，例如 @v1.0.0
         with:
           serviceId: ${{ secrets.RENDER_SERVICE_ID }}
           apiKey: ${{ secrets.RENDER_API_KEY }}
-          multipleDeployment: false #optional, default true
+          multipleDeployment: false # optional, default true
